@@ -1,10 +1,11 @@
 """Command line entry point for histfmt."""
 
 import argparse
+import os
 import sys
 from typing import List, Optional
 
-from .formatter import dedupe, to_human, to_json
+from .formatter import DEFAULT_TIME_FORMAT, dedupe, to_human, to_json
 from .parser import parse
 
 
@@ -33,6 +34,13 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="keep consecutive duplicate commands instead of collapsing them",
     )
+    parser.add_argument(
+        "--time-format",
+        metavar="STRFTIME",
+        help="strftime pattern for timestamps in the human-readable listing "
+        "(defaults to the HISTTIMEFORMAT environment variable if it is set, "
+        "otherwise '%%Y-%%m-%%d %%H:%%M:%%S'); has no effect on --json output",
+    )
     return parser
 
 
@@ -49,7 +57,11 @@ def main(argv: Optional[List[str]] = None) -> int:
     entries = parse(lines, fmt=args.format)
     if not args.no_dedupe:
         entries = dedupe(entries)
-    output = to_json(entries) if args.json else to_human(entries)
+    if args.json:
+        output = to_json(entries)
+    else:
+        time_format = args.time_format or os.environ.get("HISTTIMEFORMAT") or DEFAULT_TIME_FORMAT
+        output = to_human(entries, time_format=time_format)
     print(output)
     return 0
 

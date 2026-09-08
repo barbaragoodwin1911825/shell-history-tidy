@@ -6,6 +6,8 @@ from typing import Iterable, List, Optional
 
 from .parser import HistoryEntry
 
+DEFAULT_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
+
 
 def dedupe(entries: Iterable[HistoryEntry]) -> List[HistoryEntry]:
     """Drop consecutive duplicate commands.
@@ -28,18 +30,24 @@ def normalize_command(command: str) -> str:
     return " ".join(command.strip().split())
 
 
-def _format_timestamp(timestamp: Optional[int]) -> Optional[str]:
+def _format_timestamp(timestamp: Optional[int], time_format: str) -> Optional[str]:
     if timestamp is None:
         return None
     stamp = datetime.fromtimestamp(timestamp, tz=timezone.utc)
-    return f"{stamp:%Y-%m-%d %H:%M:%S}"
+    return stamp.strftime(time_format)
 
 
-def to_human(entries: List[HistoryEntry]) -> str:
+def to_human(entries: List[HistoryEntry], time_format: str = DEFAULT_TIME_FORMAT) -> str:
+    """Render entries as one line each, timestamp first when one is known.
+
+    `time_format` is a strftime pattern, the same kind of thing bash reads
+    from HISTTIMEFORMAT, so a caller can match whatever style they already
+    have their shell's `history` command printing.
+    """
     lines = []
     for entry in entries:
         command = normalize_command(entry.command)
-        stamp = _format_timestamp(entry.timestamp)
+        stamp = _format_timestamp(entry.timestamp, time_format)
         lines.append(f"{stamp}  {command}" if stamp else command)
     return "\n".join(lines)
 

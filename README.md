@@ -55,6 +55,22 @@ duplicate commands instead of collapsing them:
 $ histfmt --format fish --no-dedupe ~/.local/share/fish/fish_history
 ```
 
+Change how timestamps are printed in the human-readable listing with
+`--time-format`, which takes the same kind of strftime pattern bash reads
+from `HISTTIMEFORMAT`. If you already have `HISTTIMEFORMAT` set in your
+environment, `histfmt` picks it up automatically so the output matches what
+`history` prints for you:
+
+```
+$ histfmt --time-format '%H:%M' ~/.bash_history
+09:14  git status
+09:14  ls -la
+```
+
+`--time-format` only affects the human-readable listing; `--json` timestamps
+are always the raw epoch seconds so downstream tools don't have to parse a
+locale-dependent string.
+
 ## Why
 
 I wanted a single normalised view across the three shells I actually use
@@ -73,7 +89,7 @@ pip install -e .
 
 ## Status
 
-Early. Bash, zsh extended, and fish history parsing all work. Things that
-don't exist yet are listed in the repo's issues / roadmap: multi-file merges,
-`HISTTIMEFORMAT`-style custom formats beyond the epoch-comment case, and a
-filtering flag.
+Early. Bash, zsh extended, and fish history parsing all work, and
+`--time-format` covers `HISTTIMEFORMAT`-style custom formats. Things that
+don't exist yet are listed in the repo's issues / roadmap: a filtering flag
+and merging multiple history files.
