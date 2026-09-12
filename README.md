@@ -71,6 +71,18 @@ $ histfmt --time-format '%H:%M' ~/.bash_history
 are always the raw epoch seconds so downstream tools don't have to parse a
 locale-dependent string.
 
+Only show commands matching a pattern with `--filter`. It's a plain substring
+match by default; add `--regex` to treat it as a regular expression instead:
+
+```
+$ histfmt --filter git ~/.bash_history
+git status
+git commit -m "fix off-by-one"
+
+$ histfmt --filter '^git (status|log)' --regex ~/.bash_history
+git status
+```
+
 ## Why
 
 I wanted a single normalised view across the three shells I actually use
@@ -89,7 +101,7 @@ pip install -e .
 
 ## Status
 
-Early. Bash, zsh extended, and fish history parsing all work, and
-`--time-format` covers `HISTTIMEFORMAT`-style custom formats. Things that
-don't exist yet are listed in the repo's issues / roadmap: a filtering flag
-and merging multiple history files.
+Early. Bash, zsh extended, and fish history parsing all work, `--time-format`
+covers `HISTTIMEFORMAT`-style custom formats, and `--filter` handles
+substring/regex search. Merging multiple history files together is still on
+the roadmap.

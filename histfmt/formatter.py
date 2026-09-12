@@ -1,12 +1,29 @@
 """Render parsed history entries as human-readable text or JSON."""
 
 import json
+import re
 from datetime import datetime, timezone
 from typing import Iterable, List, Optional
 
 from .parser import HistoryEntry
 
 DEFAULT_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
+
+
+def filter_entries(
+    entries: Iterable[HistoryEntry], pattern: str, regex: bool = False
+) -> List[HistoryEntry]:
+    """Keep only entries whose command matches `pattern`.
+
+    Plain substring matching by default, since that covers the common case
+    of "did I run something with docker in it" without needing to know
+    regex syntax. `regex=True` compiles `pattern` and matches with search,
+    so the caller doesn't have to anchor it themselves.
+    """
+    if regex:
+        matcher = re.compile(pattern)
+        return [entry for entry in entries if matcher.search(entry.command)]
+    return [entry for entry in entries if pattern in entry.command]
 
 
 def dedupe(entries: Iterable[HistoryEntry]) -> List[HistoryEntry]:
