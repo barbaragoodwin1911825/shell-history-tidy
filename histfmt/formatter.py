@@ -26,6 +26,20 @@ def filter_entries(
     return [entry for entry in entries if pattern in entry.command]
 
 
+def merge_entries(entry_lists: Iterable[Iterable[HistoryEntry]]) -> List[HistoryEntry]:
+    """Merge entries parsed from several history files into one timeline.
+
+    Sorted by timestamp so interleaved bash/zsh/fish histories from
+    different machines line up chronologically instead of just being
+    file after file. Entries with no timestamp can't be placed on that
+    timeline, so they're pushed to the end, in the order they were
+    encountered; `sorted` is stable so ties (including "no timestamp")
+    don't reorder entries that were already in the right order.
+    """
+    merged = [entry for entries in entry_lists for entry in entries]
+    return sorted(merged, key=lambda entry: (entry.timestamp is None, entry.timestamp or 0))
+
+
 def dedupe(entries: Iterable[HistoryEntry]) -> List[HistoryEntry]:
     """Drop consecutive duplicate commands.
 

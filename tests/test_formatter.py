@@ -1,7 +1,7 @@
 import json
 import unittest
 
-from histfmt.formatter import dedupe, filter_entries, normalize_command, to_human, to_json
+from histfmt.formatter import dedupe, filter_entries, merge_entries, normalize_command, to_human, to_json
 from histfmt.parser import HistoryEntry
 
 
@@ -36,6 +36,37 @@ class FilterEntriesTests(unittest.TestCase):
 
     def test_empty_input(self):
         self.assertEqual(filter_entries([], "git"), [])
+
+
+class MergeEntriesTests(unittest.TestCase):
+    def test_interleaves_by_timestamp(self):
+        bash = [HistoryEntry(command="git status", timestamp=1690000000)]
+        zsh = [HistoryEntry(command="ls -la", timestamp=1689999999)]
+        result = merge_entries([bash, zsh])
+        self.assertEqual([e.command for e in result], ["ls -la", "git status"])
+
+    def test_entries_without_timestamp_go_last_in_original_order(self):
+        with_ts = [HistoryEntry(command="git status", timestamp=1690000000)]
+        without_ts = [HistoryEntry(command="ls -la"), HistoryEntry(command="cd ..")]
+        result = merge_entries([without_ts, with_ts])
+        self.assertEqual([e.command for e in result], ["git status", "ls -la", "cd .."])
+
+    def test_stable_for_equal_timestamps(self):
+        first = [HistoryEntry(command="a", timestamp=100)]
+        second = [HistoryEntry(command="b", timestamp=100)]
+        result = merge_entries([first, second])
+        self.assertEqual([e.command for e in result], ["a", "b"])
+
+    def test_single_list_is_unchanged_when_already_sorted(self):
+        entries = [
+            HistoryEntry(command="a", timestamp=1),
+            HistoryEntry(command="b", timestamp=2),
+        ]
+        self.assertEqual(merge_entries([entries]), entries)
+
+    def test_empty_input(self):
+        self.assertEqual(merge_entries([]), [])
+        self.assertEqual(merge_entries([[], []]), [])
 
 
 class DedupeTests(unittest.TestCase):

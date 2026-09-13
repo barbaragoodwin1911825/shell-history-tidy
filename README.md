@@ -83,6 +83,21 @@ $ histfmt --filter '^git (status|log)' --regex ~/.bash_history
 git status
 ```
 
+Merge several history files into one timeline, sorted by timestamp, by passing
+more than one path. Useful for combining `.bash_history` copied off an old
+server with what's since accumulated locally in `.zsh_history`:
+
+```
+$ histfmt ~/.bash_history ~/.zsh_history
+2023-07-20 11:02:04  ssh build01
+2023-07-22 09:14:03  git status
+2023-07-22 09:14:11  ls -la
+```
+
+Entries with no timestamp (plain bash history without `HISTTIMEFORMAT`) can't
+be placed on that timeline, so they're kept in their original order at the
+end of the merged output.
+
 ## Why
 
 I wanted a single normalised view across the three shells I actually use
@@ -102,6 +117,7 @@ pip install -e .
 ## Status
 
 Early. Bash, zsh extended, and fish history parsing all work, `--time-format`
-covers `HISTTIMEFORMAT`-style custom formats, and `--filter` handles
-substring/regex search. Merging multiple history files together is still on
-the roadmap.
+covers `HISTTIMEFORMAT`-style custom formats, `--filter` handles
+substring/regex search, and multiple history files can be merged into one
+sorted timeline. Shell completion and a PyPI release are still on the
+roadmap.

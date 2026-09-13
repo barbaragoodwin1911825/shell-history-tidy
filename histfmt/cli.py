@@ -6,7 +6,7 @@ import re
 import sys
 from typing import List, Optional
 
-from .formatter import DEFAULT_TIME_FORMAT, dedupe, filter_entries, to_human, to_json
+from .formatter import DEFAULT_TIME_FORMAT, dedupe, filter_entries, merge_entries, to_human, to_json
 from .parser import parse
 
 
@@ -17,8 +17,9 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "histfile",
-        nargs="?",
-        help="path to a history file, defaults to stdin",
+        nargs="*",
+        help="path to a history file, defaults to stdin; pass more than one "
+        "to merge them into a single timeline sorted by timestamp",
     )
     parser.add_argument(
         "--format",
@@ -69,8 +70,12 @@ def main(argv: Optional[List[str]] = None) -> int:
     args = arg_parser.parse_args(argv)
     if args.regex and not args.filter:
         arg_parser.error("--regex has no effect without --filter")
-    lines = read_lines(args.histfile)
-    entries = parse(lines, fmt=args.format)
+    if not args.histfile:
+        entries = parse(read_lines(None), fmt=args.format)
+    elif len(args.histfile) == 1:
+        entries = parse(read_lines(args.histfile[0]), fmt=args.format)
+    else:
+        entries = merge_entries(parse(read_lines(path), fmt=args.format) for path in args.histfile)
     if not args.no_dedupe:
         entries = dedupe(entries)
     if args.filter:
